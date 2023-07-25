@@ -6,6 +6,8 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private PlayerCharacter _player;
+    private float inputH;
+    private float inputV;
 
     private void Start()
     {
@@ -14,8 +16,8 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        float inputH = Input.GetAxisRaw("Horizontal");
-        float inputV = Input.GetAxisRaw("Vertical");
+        inputH = Input.GetAxisRaw("Horizontal");
+        inputV = Input.GetAxisRaw("Vertical");
         _player.SetInput(inputH, inputV);
     }
 
@@ -26,10 +28,30 @@ public class PlayerController : MonoBehaviour
 
     private void SendChanges()
     {
+        Vector3 rotation = transform.rotation.eulerAngles;
+
         Dictionary<string, object> data = new Dictionary<string, object>()
         {
-            { "x", transform.position.x },
-            { "y", transform.position.z }
+            { "position", new Dictionary<string, float>()
+                {
+                    { "x", transform.position.x },
+                    { "y", transform.position.y },
+                    { "z", transform.position.z }
+                } 
+            },
+            { "velocity", new Dictionary<string, float>()
+                {
+                    { "x", inputH },
+                    { "z", inputV }
+                }
+            },
+            { "rotation", new Dictionary<string, float>()
+                {
+                    { "x", rotation.x },
+                    { "y", rotation.y },
+                    { "z", rotation.z }
+                }
+            }
         };
 
         MultiplayerManager.Instance.SendMessage("move", data);

@@ -8,10 +8,16 @@
 using Colyseus.Schema;
 
 public partial class Player : Schema {
-	[Type(0, "number")]
-	public float x = default(float);
+	[Type(0, "ref", typeof(Vector3_NO))]
+	public Vector3_NO position = new Vector3_NO();
 
-	[Type(1, "number")]
-	public float y = default(float);
+	[Type(1, "ref", typeof(Vector3_NO))]
+	public Vector3_NO velocity = new Vector3_NO();
+
+	[Type(2, "ref", typeof(Vector3_NO))]
+	public Vector3_NO rotation = new Vector3_NO();
+
+	[Type(3, "number")]
+	public float angularVelocity = default(float);
 }
 

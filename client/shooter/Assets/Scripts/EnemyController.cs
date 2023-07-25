@@ -13,19 +13,20 @@ public class EnemyController : MonoBehaviour
         _enemy = GetComponent<EnemyCharacter>();
     }
 
-    public void OnChange(List<DataChange> changes)
+    private Vector3 ProcessVector3Changes(Vector3 value, List<DataChange> changes)
     {
-        Vector3 position = transform.position;
-
         foreach (DataChange change in changes)
         {
             switch (change.Field)
             {
                 case "x":
-                    position.x = (float)change.Value;
+                    value.x = (float)change.Value;
                     break;
                 case "y":
-                    position.z = (float)change.Value;
+                    value.y = (float)change.Value;
+                    break;
+                case "z":
+                    value.z = (float)change.Value;
                     break;
                 default:
                     Debug.LogWarning($"Changes to the {change.Field} parameter are not processed");
@@ -33,6 +34,18 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        _enemy.SetPosition(position);
+        return value;
+    }
+
+    public void OnPositionChange(List<DataChange> changes)
+    {
+        Vector3 newPosition = ProcessVector3Changes(transform.position, changes);
+        _enemy.UpdatePosition(newPosition);
+    }
+
+    public void OnVelocityChange(List<DataChange> changes)
+    {
+        Vector3 newVelocity = ProcessVector3Changes(Vector3.zero, changes);
+        _enemy.UpdateVelocity(newVelocity);
     }
 }
