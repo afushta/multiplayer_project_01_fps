@@ -1,12 +1,45 @@
 import { Room, Client } from "colyseus";
 import { Schema, type, MapSchema } from "@colyseus/schema";
 
-export class Player extends Schema {
+export class Vector3_NO extends Schema {
     @type("number")
-    x = Math.random() * 30 - 15;
+    x = 0;
 
     @type("number")
-    y = Math.random() * 30 - 15;
+    y = 0;
+
+    @type("number")
+    z = 0;
+
+    constructor (x = 0, y = 0, z = 0)
+    {
+        super();
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    updateValue(newValue: any) {
+        if (!newValue) return;
+
+        if (newValue.x != null) this.x = newValue.x;
+        if (newValue.y != null) this.y = newValue.y;
+        if (newValue.z != null) this.z = newValue.z;
+    }
+}
+
+export class Player extends Schema {
+    @type(Vector3_NO)
+    position = new Vector3_NO(Math.random() * 30 - 15, 0, Math.random() * 30 - 15);
+
+    @type(Vector3_NO)
+    velocity = new Vector3_NO();
+
+    @type(Vector3_NO)
+    rotation = new Vector3_NO();
+
+    @type("number")
+    angularVelocity = 0;
 }
 
 export class State extends Schema {
@@ -22,12 +55,11 @@ export class State extends Schema {
     }
 
     movePlayer (sessionId: string, movement: any) {
-        if (movement.x) {
-            this.players.get(sessionId).x = movement.x;
-        }
-        if (movement.y) {
-            this.players.get(sessionId).y = movement.y;
-        }
+        var player = this.players.get(sessionId);
+        player.position.updateValue(movement.position);
+        player.velocity.updateValue(movement.velocity);
+        player.rotation.updateValue(movement.rotation);
+        if (movement.angularVelocity != null) player.angularVelocity = movement.angularVelocity;
     }
 }
 

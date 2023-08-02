@@ -44,15 +44,16 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
 
     private void CreatePlayer(Player player)
     {
-        Vector3 position = new Vector3(player.x, 0f, player.y);
+        Vector3 position = new Vector3(player.position.x, player.position.y, player.position.z);
         Instantiate(_playerPrefab, position, Quaternion.identity);
     }
 
     private void CreateEnemy(string playerId, Player player)
     {
-        Vector3 position = new Vector3(player.x, 0f, player.y);
+        Vector3 position = new Vector3(player.position.x, player.position.y, player.position.z);
         EnemyController enemy = Instantiate(_enemyPrefab, position, Quaternion.identity);
-        player.OnChange += enemy.OnChange;
+        player.position.OnChange += enemy.OnPositionChange;
+        player.velocity.OnChange += enemy.OnVelocityChange;
     }
 
     private void RemoveEnemy(string key, Player value)
