@@ -36,7 +36,7 @@ public class EnemyController : MonoBehaviour
         Vector3 position = new Vector3(shootInfo.pX, shootInfo.pY, shootInfo.pZ);
         Vector3 velocity = new Vector3(shootInfo.vX, shootInfo.vY, shootInfo.vZ);
 
-        _gun.Shoot(position, velocity);
+        _gun.Shoot(position, velocity, _receiveTimeIntervals.AverageValue);
     }
 
     private Vector3 ProcessVector3Changes(Vector3 value, List<DataChange> changes)
