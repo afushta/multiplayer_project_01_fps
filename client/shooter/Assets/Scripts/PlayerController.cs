@@ -5,20 +5,32 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerCharacter))]
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] private PlayerGun _playerGun;
+    [SerializeField] private Vector2 _mouseSensetivity = new Vector2(1f, 1f);
+
     private PlayerCharacter _player;
-    private float inputH;
-    private float inputV;
+    private MultiplayerManager _multiplayerManager;
 
     private void Start()
     {
         _player = GetComponent<PlayerCharacter>();
+        _multiplayerManager = MultiplayerManager.Instance;
     }
 
     private void Update()
     {
-        inputH = Input.GetAxisRaw("Horizontal");
-        inputV = Input.GetAxisRaw("Vertical");
-        _player.SetInput(inputH, inputV);
+        float inputH = Input.GetAxisRaw("Horizontal");
+        float inputV = Input.GetAxisRaw("Vertical");
+        float mouseX = Input.GetAxis("Mouse X");
+        float mouseY = Input.GetAxis("Mouse Y");
+        bool isJumping = Input.GetKeyDown(KeyCode.Space);
+        bool isShooting = Input.GetMouseButton(0);
+
+        _player.RotateV(-mouseY * _mouseSensetivity.y);
+        _player.SetInput(inputH, inputV, mouseX * _mouseSensetivity.x);
+
+        if (isJumping) _player.Jump();
+        if (isShooting && _playerGun.TryShoot(out ShootInfo shootInfo)) SendShoot(ref shootInfo);
     }
 
     private void LateUpdate()
@@ -26,34 +38,42 @@ public class PlayerController : MonoBehaviour
         SendChanges();
     }
 
+    private void SendShoot(ref ShootInfo shootInfo)
+    {
+        shootInfo.key = MultiplayerManager.Instance.SessionId;
+        string data = JsonUtility.ToJson(shootInfo);
+        _multiplayerManager.SendMessage("shoot", data);
+    }
+
     private void SendChanges()
     {
-        Vector3 rotation = transform.rotation.eulerAngles;
+        _player.GetMovementInfo(out Vector3 position, out Vector3 velocity, out Vector3 rotation, out float angularVelocity);
 
         Dictionary<string, object> data = new Dictionary<string, object>()
         {
             { "position", new Dictionary<string, float>()
                 {
-                    { "x", transform.position.x },
-                    { "y", transform.position.y },
-                    { "z", transform.position.z }
+                    { "x", position.x },
+                    { "y", position.y },
+                    { "z", position.z }
                 } 
             },
             { "velocity", new Dictionary<string, float>()
                 {
-                    { "x", inputH },
-                    { "z", inputV }
+                    { "x", velocity.x },
+                    { "y", velocity.y },
+                    { "z", velocity.z }
                 }
             },
             { "rotation", new Dictionary<string, float>()
                 {
                     { "x", rotation.x },
-                    { "y", rotation.y },
-                    { "z", rotation.z }
+                    { "y", rotation.y }
                 }
-            }
+            },
+            { "angularVelocity", angularVelocity }
         };
 
-        MultiplayerManager.Instance.SendMessage("move", data);
+        _multiplayerManager.SendMessage("move", data);
     }
 }

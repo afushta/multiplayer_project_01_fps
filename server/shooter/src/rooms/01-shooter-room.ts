@@ -38,16 +38,21 @@ export class Player extends Schema {
     @type(Vector3_NO)
     rotation = new Vector3_NO();
 
+    @type(Vector3_NO)
+    angularVelocity = new Vector3_NO();
+
     @type("number")
-    angularVelocity = 0;
+    speed = 0;
 }
 
 export class State extends Schema {
     @type({ map: Player })
     players = new MapSchema<Player>();
 
-    createPlayer(sessionId: string) {
-        this.players.set(sessionId, new Player());
+    createPlayer(sessionId: string, data: any) {
+        const player = new Player();
+        player.speed = data.speed;
+        this.players.set(sessionId, player);
     }
 
     removePlayer(sessionId: string) {
@@ -55,11 +60,11 @@ export class State extends Schema {
     }
 
     movePlayer (sessionId: string, movement: any) {
-        var player = this.players.get(sessionId);
+        const player = this.players.get(sessionId);
         player.position.updateValue(movement.position);
         player.velocity.updateValue(movement.velocity);
         player.rotation.updateValue(movement.rotation);
-        if (movement.angularVelocity != null) player.angularVelocity = movement.angularVelocity;
+        player.angularVelocity.updateValue(movement.angularVelocity);
     }
 }
 
@@ -72,8 +77,11 @@ export class StateHandlerRoom extends Room<State> {
         this.setState(new State());
 
         this.onMessage("move", (client, data) => {
-            // console.log("StateHandlerRoom received message from", client.sessionId, ":", data);
             this.state.movePlayer(client.sessionId, data);
+        });
+
+        this.onMessage("shoot", (client, data) => {
+            this.broadcast("shoot", data, {except: client});
         });
     }
 
@@ -81,8 +89,8 @@ export class StateHandlerRoom extends Room<State> {
         return true;
     }
 
-    onJoin (client: Client) {
-        this.state.createPlayer(client.sessionId);
+    onJoin (client: Client, options: any) {
+        this.state.createPlayer(client.sessionId, options);
     }
 
     onLeave (client) {

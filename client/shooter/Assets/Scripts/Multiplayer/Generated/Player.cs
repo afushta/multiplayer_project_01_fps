@@ -17,7 +17,10 @@ public partial class Player : Schema {
 	[Type(2, "ref", typeof(Vector3_NO))]
 	public Vector3_NO rotation = new Vector3_NO();
 
-	[Type(3, "number")]
-	public float angularVelocity = default(float);
+	[Type(3, "ref", typeof(Vector3_NO))]
+	public Vector3_NO angularVelocity = new Vector3_NO();
+
+	[Type(4, "number")]
+	public float speed = default(float);
 }
 
