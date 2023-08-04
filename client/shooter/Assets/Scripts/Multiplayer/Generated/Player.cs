@@ -22,5 +22,8 @@ public partial class Player : Schema {
 
 	[Type(4, "number")]
 	public float speed = default(float);
+
+	[Type(5, "boolean")]
+	public bool isCrouching = default(bool);
 }
 

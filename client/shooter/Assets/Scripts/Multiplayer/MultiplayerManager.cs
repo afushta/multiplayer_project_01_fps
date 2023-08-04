@@ -1,8 +1,6 @@
 using Colyseus;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.EventSystems.EventTrigger;
 
 
 public class MultiplayerManager : ColyseusManager<MultiplayerManager>
@@ -34,8 +32,6 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
         _room.OnStateChange += OnChange;
         _room.OnMessage<string>("shoot", OnEnemyShoot);
     }
-
-    
 
     private void OnChange(State state, bool isFirstState)
     {

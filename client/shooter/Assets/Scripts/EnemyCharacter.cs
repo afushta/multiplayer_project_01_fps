@@ -2,10 +2,14 @@ using UnityEngine;
 
 public class EnemyCharacter : BaseCharacter
 {
-    [SerializeField] private Transform _head;
+    private const string CROUCH = "Crouch";
 
-    private Vector3 serverPosition;
-    private Vector3 serverRotation;
+    [SerializeField] private Transform _head;
+    [SerializeField] private Animator _characterAnimator;
+    [SerializeField] private float _lerpStrength = 5f;
+
+    private Vector3 _serverPosition;
+    private Vector3 _serverRotation;
 
     public Vector3 TargetPosition { get; private set; }
     public Vector3 TargetRotation { get; private set; }
@@ -19,6 +23,12 @@ public class EnemyCharacter : BaseCharacter
 
     private void Update()
     {
+        Move();
+        Rotate();
+    }
+
+    private void Move()
+    {
         if (Velocity.magnitude > 0.01f)
         {
             float maxDistance = Velocity.magnitude * Time.deltaTime;
@@ -26,23 +36,32 @@ public class EnemyCharacter : BaseCharacter
         }
         else
         {
-            transform.position = TargetPosition;
+            transform.position = Vector3.Lerp(transform.position, TargetPosition, _lerpStrength * Time.deltaTime);
         }
+    }
 
+    private void Rotate()
+    {
         Quaternion headTargetRotation = Quaternion.Euler(TargetRotation.x, 0f, 0f);
-        Quaternion bodyTargetRotation = Quaternion.Euler(0f, TargetRotation.y, 0f);
-
-        if (AngularVelocity.magnitude > 0.01f)
+        if (AngularVelocity.x > 0.01f)
         {
             float maxRotationX = AngularVelocity.x * Time.deltaTime;
-            float maxRotationY = AngularVelocity.y * Time.deltaTime;
             _head.localRotation = Quaternion.RotateTowards(_head.localRotation, headTargetRotation, maxRotationX);
+        }
+        else
+        {
+            _head.localRotation = Quaternion.Lerp(_head.localRotation, headTargetRotation, _lerpStrength * Time.deltaTime);
+        }
+
+        Quaternion bodyTargetRotation = Quaternion.Euler(0f, TargetRotation.y, 0f);
+        if (AngularVelocity.y > 0.01f)
+        {
+            float maxRotationY = AngularVelocity.y * Time.deltaTime;
             transform.rotation = Quaternion.RotateTowards(transform.rotation, bodyTargetRotation, maxRotationY);
         }
         else
         {
-            _head.localRotation = headTargetRotation;
-            transform.rotation = bodyTargetRotation;
+            transform.rotation = Quaternion.Lerp(transform.rotation, bodyTargetRotation, _lerpStrength * Time.deltaTime);
         }
     }
 
@@ -53,17 +72,17 @@ public class EnemyCharacter : BaseCharacter
 
     private void UpdateTargetPosition(float averageReceiveTimeInterval)
     {
-        TargetPosition = serverPosition + Velocity * averageReceiveTimeInterval;
+        TargetPosition = _serverPosition + Velocity * averageReceiveTimeInterval;
     }
 
     private void UpdateTargetRotation(float averageReceiveTimeInterval)
     {
-        TargetRotation = serverRotation + AngularVelocity * averageReceiveTimeInterval;
+        TargetRotation = _serverRotation + AngularVelocity * averageReceiveTimeInterval;
     }
 
     public void UpdatePosition(Vector3 position, float averageReceiveTimeInterval)
     {
-        serverPosition = position;
+        _serverPosition = position;
         UpdateTargetPosition(averageReceiveTimeInterval);
     }
 
@@ -75,7 +94,7 @@ public class EnemyCharacter : BaseCharacter
 
     public void UpdateRotation(Vector3 rotation, float averageReceiveTimeInterval)
     {
-        serverRotation = rotation;
+        _serverRotation = rotation;
         UpdateTargetRotation(averageReceiveTimeInterval);
     }
 
@@ -83,5 +102,10 @@ public class EnemyCharacter : BaseCharacter
     {
         AngularVelocity = angularVelocity;
         UpdateTargetRotation(averageReceiveTimeInterval);
+    }
+
+    public void UpdateCrouch(bool value)
+    {
+        _characterAnimator.SetBool(CROUCH, value);
     }
 }
