@@ -4,8 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody), typeof(CheckGrounded))]
 public class PlayerCharacter : BaseCharacter
 {
+    private const string CROUCH = "Crouch";
+
     [SerializeField] private Transform _head;
     [SerializeField] private Transform _cameraPoint;
+    [SerializeField] private Animator _characterAnimator;
     [SerializeField] private float _minHeadAngle = -90f;
     [SerializeField] private float _maxHeadAngle = 90f;
     [SerializeField] private float _jumpForce = 5f;
@@ -19,7 +22,8 @@ public class PlayerCharacter : BaseCharacter
     private float _movementH;
     private float _movementV;
     private float _rotationH;
-    private float _rotationv;
+    private float _rotationV;
+    private bool _isCrouching;
 
     private void Awake()
     {
@@ -57,10 +61,16 @@ public class PlayerCharacter : BaseCharacter
         }
     }
 
+    public void Crouch(bool isActive)
+    {
+        _isCrouching = isActive;
+        _characterAnimator.SetBool(CROUCH, isActive);
+    }
+
     public void RotateV(float value)
     {
-        _rotationv = Mathf.Clamp(_rotationv + value, _minHeadAngle, _maxHeadAngle);
-        _head.localEulerAngles = new Vector3(_rotationv, 0f, 0f);
+        _rotationV = Mathf.Clamp(_rotationV + value, _minHeadAngle, _maxHeadAngle);
+        _head.localEulerAngles = new Vector3(_rotationV, 0f, 0f);
     }
 
     private void RotateH()
@@ -76,11 +86,12 @@ public class PlayerCharacter : BaseCharacter
         _rotationH += rotationH;
     }
 
-    public void GetMovementInfo(out Vector3 position, out Vector3 velocity, out Vector3 rotation, out float angularVelocity)
+    public void GetMovementInfo(out Vector3 position, out Vector3 velocity, out Vector3 rotation, out float angularVelocity, out bool isCrouching)
     {
         position = transform.position;
         velocity = _rigidbody.velocity;
-        rotation = new Vector3(_rotationv, transform.eulerAngles.y, 0f);
+        rotation = new Vector3(_rotationV, transform.eulerAngles.y, 0f);
         angularVelocity = _rigidbody.angularVelocity.y;
+        isCrouching = _isCrouching;
     }
 }

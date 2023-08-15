@@ -43,6 +43,9 @@ export class Player extends Schema {
 
     @type("number")
     speed = 0;
+
+    @type("boolean")
+    isCrouching = false;
 }
 
 export class State extends Schema {
@@ -65,6 +68,7 @@ export class State extends Schema {
         player.velocity.updateValue(movement.velocity);
         player.rotation.updateValue(movement.rotation);
         player.angularVelocity.updateValue(movement.angularVelocity);
+        if (movement.isCrouching != null) player.isCrouching = movement.isCrouching;
     }
 }
 

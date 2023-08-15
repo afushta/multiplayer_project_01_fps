@@ -24,12 +24,14 @@ public class PlayerController : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X");
         float mouseY = Input.GetAxis("Mouse Y");
         bool isJumping = Input.GetKeyDown(KeyCode.Space);
+        bool isCrouching = Input.GetKey(KeyCode.LeftControl);
         bool isShooting = Input.GetMouseButton(0);
 
         _player.RotateV(-mouseY * _mouseSensetivity.y);
         _player.SetInput(inputH, inputV, mouseX * _mouseSensetivity.x);
 
         if (isJumping) _player.Jump();
+        _player.Crouch(isCrouching);
         if (isShooting && _playerGun.TryShoot(out ShootInfo shootInfo)) SendShoot(ref shootInfo);
     }
 
@@ -47,7 +49,7 @@ public class PlayerController : MonoBehaviour
 
     private void SendChanges()
     {
-        _player.GetMovementInfo(out Vector3 position, out Vector3 velocity, out Vector3 rotation, out float angularVelocity);
+        _player.GetMovementInfo(out Vector3 position, out Vector3 velocity, out Vector3 rotation, out float angularVelocity, out bool isCrouching);
 
         Dictionary<string, object> data = new Dictionary<string, object>()
         {
@@ -71,7 +73,13 @@ public class PlayerController : MonoBehaviour
                     { "y", rotation.y }
                 }
             },
-            { "angularVelocity", angularVelocity }
+            { "angularVelocity", new Dictionary<string, float>()
+                {
+                    { "x", 0 },
+                    { "y", angularVelocity }
+                }
+            },
+            { "isCrouching", isCrouching }
         };
 
         _multiplayerManager.SendMessage("move", data);

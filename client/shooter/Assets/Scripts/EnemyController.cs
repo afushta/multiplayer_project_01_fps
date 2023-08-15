@@ -27,6 +27,7 @@ public class EnemyController : MonoBehaviour
         player.velocity.OnChange += OnVelocityChange;
         player.rotation.OnChange += OnRotationChange;
         player.angularVelocity.OnChange += OnAngularVelocityChange;
+        player.OnChange += OnChange;
         player.OnRemove += OnRemove;
     }
 
@@ -35,7 +36,7 @@ public class EnemyController : MonoBehaviour
         Vector3 position = new Vector3(shootInfo.pX, shootInfo.pY, shootInfo.pZ);
         Vector3 velocity = new Vector3(shootInfo.vX, shootInfo.vY, shootInfo.vZ);
 
-        _gun.Shoot(position, velocity);
+        _gun.Shoot(position, velocity, _receiveTimeIntervals.AverageValue);
     }
 
     private Vector3 ProcessVector3Changes(Vector3 value, List<DataChange> changes)
@@ -103,6 +104,22 @@ public class EnemyController : MonoBehaviour
     public void OnAngularVelocityChange(List<DataChange> changes)
     {
         OnVector3FieldChange(PlayerField.AngularVelocity, _enemy.AngularVelocity, changes);
+    }
+
+    public void OnChange(List<DataChange> changes)
+    {
+        foreach (DataChange change in changes)
+        {
+            switch (change.Field)
+            {
+                case "isCrouching":
+                    _enemy.UpdateCrouch((bool)change.Value);
+                    break;
+                default:
+                    Debug.LogWarning($"Get changes in unsupported field {change.Field}");
+                    break;
+            }
+        }
     }
 
     public void OnRemove()
