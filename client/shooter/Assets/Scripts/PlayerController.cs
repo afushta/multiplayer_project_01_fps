@@ -8,7 +8,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float _respawnDelay = 3f;
-    [SerializeField] private PlayerGun _playerGun;
+    [SerializeField] private Inventory<PlayerGun> _playerInventory;
     [SerializeField] private Vector2 _mouseSensetivity = new Vector2(1f, 1f);
     [SerializeField] private PlayerCharacter _player;
     
@@ -65,7 +65,21 @@ public class PlayerController : MonoBehaviour
 
         if (isJumping) _player.Jump();
         _player.Crouch(isCrouching);
-        if (isShooting && _playerGun.TryShoot(out ShootInfo shootInfo)) SendShoot(ref shootInfo);
+        if (isShooting && _playerInventory.CurrentGun.TryShoot(out ShootInfo shootInfo)) SendShoot(ref shootInfo);
+
+        if (Input.GetKeyDown(KeyCode.Alpha1)) SwitchGun(0);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) SwitchGun(1);
+    }
+
+    private void SwitchGun(int index)
+    {
+        _playerInventory.SwitchGun(index);
+
+        Dictionary<string, object> data = new()
+        {
+            { "gunId", index }
+        };
+        _multiplayerManager.SendMessage("gun", data);
     }
 
     private void LateUpdate()

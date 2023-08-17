@@ -54,6 +54,9 @@ export class Player extends Schema {
     isCrouching = false;
 
     @type("uint8")
+    gun = 0;
+
+    @type("uint8")
     kills = 0;
 
     @type("uint8")
@@ -100,6 +103,11 @@ export class StateHandlerRoom extends Room<State> {
 
         this.onMessage("shoot", (client, data) => {
             this.broadcast("shoot", data, {except: client});
+        });
+
+        this.onMessage("gun", (client, data) => {
+            const player = this.state.players.get(client.sessionId);
+            player.gun = data.gunId;
         });
 
         this.onMessage("damage", (client, data) => {

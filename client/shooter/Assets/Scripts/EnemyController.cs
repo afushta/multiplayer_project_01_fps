@@ -11,7 +11,7 @@ public enum PlayerField { Position, Velocity, Rotation, AngularVelocity }
 public class EnemyController : MonoBehaviour
 {
     private EnemyCharacter _enemy;
-    [SerializeField] private EnemyGun _gun;
+    [SerializeField] private Inventory<EnemyGun> _inventory;
     private ReceiveTimeInterval _receiveTimeIntervals;
     private string _sessionId;
 
@@ -40,7 +40,7 @@ public class EnemyController : MonoBehaviour
         Vector3 position = new Vector3(shootInfo.pX, shootInfo.pY, shootInfo.pZ);
         Vector3 velocity = new Vector3(shootInfo.vX, shootInfo.vY, shootInfo.vZ);
 
-        _gun.Shoot(position, velocity, _receiveTimeIntervals.AverageValue);
+        _inventory.CurrentGun.Shoot(position, velocity, _receiveTimeIntervals.AverageValue);
     }
 
     public void ApplyDamage(int value)
@@ -52,6 +52,11 @@ public class EnemyController : MonoBehaviour
         };
 
         MultiplayerManager.Instance.SendMessage("damage", data);
+    }
+
+    public void SwitchGun(int index)
+    {
+        _inventory.SwitchGun(index);
     }
 
     private Vector3 ProcessVector3Changes(Vector3 value, List<DataChange> changes)
@@ -127,6 +132,9 @@ public class EnemyController : MonoBehaviour
         {
             switch (change.Field)
             {
+                case "gun":
+                    SwitchGun((byte)change.Value);
+                    break;
                 case "deaths":
                     ScoreManager.Instance.UpdateDeaths(_sessionId, (byte)change.Value);
                     break;

@@ -33,9 +33,12 @@ public partial class Player : Schema {
 	public bool isCrouching = default(bool);
 
 	[Type(8, "uint8")]
-	public byte kills = default(byte);
+	public byte gun = default(byte);
 
 	[Type(9, "uint8")]
+	public byte kills = default(byte);
+
+	[Type(10, "uint8")]
 	public byte deaths = default(byte);
 }
 
