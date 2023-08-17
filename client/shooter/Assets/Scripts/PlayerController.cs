@@ -1,3 +1,5 @@
+using Colyseus.Schema;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,15 +7,46 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerCharacter))]
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] private float _respawnDelay = 3f;
     [SerializeField] private PlayerGun _playerGun;
     [SerializeField] private Vector2 _mouseSensetivity = new Vector2(1f, 1f);
-
-    private PlayerCharacter _player;
+    [SerializeField] private PlayerCharacter _player;
+    
     private MultiplayerManager _multiplayerManager;
 
-    private void Start()
+    public int MaxHealth => _player.MaxHealth;
+    public float MaxSpeed => _player.MaxSpeed;
+
+    public void Init(Player player)
     {
-        _player = GetComponent<PlayerCharacter>();
+        ScoreManager.Instance.AddPlayer(_multiplayerManager.SessionId, "Player");
+        player.OnChange += OnChange;
+    }
+
+    private void OnChange(List<DataChange> changes)
+    {
+        foreach (DataChange change in changes)
+        {
+            switch (change.Field)
+            {
+                case "deaths":
+                    ScoreManager.Instance.UpdateDeaths(_multiplayerManager.SessionId, (byte)change.Value);
+                    break;
+                case "kills":
+                    ScoreManager.Instance.UpdateKills(_multiplayerManager.SessionId, (byte)change.Value);
+                    break;
+                case "currentHP":
+                    _player.UpdateHealth((sbyte)change.Value);
+                    break;
+                default:
+                    Debug.LogWarning($"Get changes in unsupported field {change.Field}");
+                    break;
+            }
+        }
+    }
+
+    private void Awake()
+    {
         _multiplayerManager = MultiplayerManager.Instance;
     }
 
@@ -83,5 +116,19 @@ public class PlayerController : MonoBehaviour
         };
 
         _multiplayerManager.SendMessage("move", data);
+    }
+
+    public void Respawn(string json)
+    {
+        Vector3 newPosition = JsonUtility.FromJson<Vector3>(json);
+        transform.position = newPosition;
+        _player.SetInput(0, 0, 0);
+        SendChanges();
+        StartCoroutine(Hold());
+    }
+
+    private IEnumerator Hold()
+    {
+        yield return new WaitForSecondsRealtime(_respawnDelay);
     }
 }

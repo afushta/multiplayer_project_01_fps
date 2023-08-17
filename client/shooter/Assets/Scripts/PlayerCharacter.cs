@@ -25,8 +25,9 @@ public class PlayerCharacter : BaseCharacter
     private float _rotationV;
     private bool _isCrouching;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _rigidbody = GetComponent<Rigidbody>();
         _checkGrounded = GetComponent<CheckGrounded>();
 
@@ -93,5 +94,10 @@ public class PlayerCharacter : BaseCharacter
         rotation = new Vector3(_rotationV, transform.eulerAngles.y, 0f);
         angularVelocity = _rigidbody.angularVelocity.y;
         isCrouching = _isCrouching;
+    }
+
+    public void UpdateHealth(int value)
+    {
+        _health.SetCurrent(value);
     }
 }

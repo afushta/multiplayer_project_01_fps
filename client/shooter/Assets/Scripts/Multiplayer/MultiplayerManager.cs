@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class MultiplayerManager : ColyseusManager<MultiplayerManager>
 {
-    [SerializeField] private PlayerCharacter _playerPrefab;
+    [SerializeField] private PlayerController _playerPrefab;
     [SerializeField] private EnemyController _enemyPrefab;
 
     private ColyseusRoom<State> _room;
@@ -16,16 +16,24 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
     protected override void Awake()
     {
         base.Awake();
-
         Instance.InitializeClient();
+    }
+
+    protected override void Start()
+    {
+        base.Start();
         Connect();
     }
 
     private async void Connect()
     {
-        Dictionary<string, object> options = new Dictionary<string, object>()
+        Debug.Log("Connect");
+        Debug.Log(_playerPrefab);
+
+        Dictionary<string, object> options = new()
         {
-            { "speed", _playerPrefab.MaxSpeed }
+            { "speed", _playerPrefab.MaxSpeed },
+            { "hp", _playerPrefab.MaxHealth }
         };
 
         _room = await Instance.client.JoinOrCreate<State>("state_handler", options);
@@ -52,14 +60,16 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
     private void CreatePlayer(Player player)
     {
         Vector3 position = new Vector3(player.position.x, player.position.y, player.position.z);
-        Instantiate(_playerPrefab, position, Quaternion.identity);
+        PlayerController playerController = Instantiate(_playerPrefab, position, Quaternion.identity);
+        playerController.Init(player);
+        _room.OnMessage<string>("respawn", playerController.Respawn);
     }
 
     private void CreateEnemy(string playerId, Player player)
     {
         Vector3 position = new Vector3(player.position.x, player.position.y, player.position.z);
         EnemyController enemy = Instantiate(_enemyPrefab, position, Quaternion.identity);
-        enemy.Init(player);
+        enemy.Init(playerId, player);
         _enemies.Add(playerId, enemy);
     }
 

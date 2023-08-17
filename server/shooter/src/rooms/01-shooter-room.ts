@@ -44,8 +44,20 @@ export class Player extends Schema {
     @type("number")
     speed = 0;
 
+    @type("int8")
+    maxHP = 0;
+
+    @type("int8")
+    currentHP = 0;
+
     @type("boolean")
     isCrouching = false;
+
+    @type("uint8")
+    kills = 0;
+
+    @type("uint8")
+    deaths = 0;
 }
 
 export class State extends Schema {
@@ -54,6 +66,8 @@ export class State extends Schema {
 
     createPlayer(sessionId: string, data: any) {
         const player = new Player();
+        player.maxHP = data.hp;
+        player.currentHP = data.hp;
         player.speed = data.speed;
         this.players.set(sessionId, player);
     }
@@ -87,6 +101,31 @@ export class StateHandlerRoom extends Room<State> {
         this.onMessage("shoot", (client, data) => {
             this.broadcast("shoot", data, {except: client});
         });
+
+        this.onMessage("damage", (client, data) => {
+            const clientId = data.id;
+            const player = this.state.players.get(clientId);
+            player.currentHP -= data.value;
+
+            if (player.currentHP <= 0) {
+                this.state.players.get(client.sessionId).kills += 1;
+                player.currentHP = player.maxHP;
+                player.deaths += 1;
+                this.respawnClient(clientId);
+            }
+        });
+    }
+
+    respawnClient (clientId) {
+        for (let index = 0; index < this.clients.length; index++) {
+            const client = this.clients[index];
+            if (client.sessionId != clientId) continue;
+            
+            const newPosition = new Vector3_NO(Math.random() * 30 - 15, 0, Math.random() * 30 - 15);
+            const message = JSON.stringify(newPosition);
+            client.send("respawn", message);
+            break;
+        }
     }
 
     onAuth(client, options, req) {

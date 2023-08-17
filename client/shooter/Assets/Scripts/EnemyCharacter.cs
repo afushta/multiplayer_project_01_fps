@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Health))]
 public class EnemyCharacter : BaseCharacter
 {
     private const string CROUCH = "Crouch";
@@ -7,7 +8,7 @@ public class EnemyCharacter : BaseCharacter
     [SerializeField] private Transform _head;
     [SerializeField] private Animator _characterAnimator;
     [SerializeField] private float _lerpStrength = 5f;
-
+    
     private Vector3 _serverPosition;
     private Vector3 _serverRotation;
 
@@ -15,8 +16,9 @@ public class EnemyCharacter : BaseCharacter
     public Vector3 TargetRotation { get; private set; }
     public Vector3 AngularVelocity { get; private set; }
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         TargetPosition = transform.position;
         TargetRotation = new Vector3(_head.localEulerAngles.x, transform.eulerAngles.y, 0f);
     }
@@ -70,6 +72,13 @@ public class EnemyCharacter : BaseCharacter
         MaxSpeed = value;
     }
 
+    public void SetMaxHealth(int value)
+    {
+        MaxHealth = value;
+        _health.SetMax(value);
+        _health.SetCurrent(value);
+    }
+
     private void UpdateTargetPosition(float averageReceiveTimeInterval)
     {
         TargetPosition = _serverPosition + Velocity * averageReceiveTimeInterval;
@@ -107,5 +116,10 @@ public class EnemyCharacter : BaseCharacter
     public void UpdateCrouch(bool value)
     {
         _characterAnimator.SetBool(CROUCH, value);
+    }
+
+    public void UpdateHealth(int value)
+    {
+        _health.SetCurrent(value);
     }
 }

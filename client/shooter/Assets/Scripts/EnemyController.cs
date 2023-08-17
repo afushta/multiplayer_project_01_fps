@@ -13,6 +13,7 @@ public class EnemyController : MonoBehaviour
     private EnemyCharacter _enemy;
     [SerializeField] private EnemyGun _gun;
     private ReceiveTimeInterval _receiveTimeIntervals;
+    private string _sessionId;
 
     private void Awake()
     {
@@ -20,15 +21,18 @@ public class EnemyController : MonoBehaviour
         _receiveTimeIntervals = new ReceiveTimeInterval(Time.time);
     }
 
-    public void Init(Player player)
+    public void Init(string sessionId, Player player)
     {
         _enemy.SetMaxSpeed(player.speed);
+        _enemy.SetMaxHealth(player.maxHP);
         player.position.OnChange += OnPositionChange;
         player.velocity.OnChange += OnVelocityChange;
         player.rotation.OnChange += OnRotationChange;
         player.angularVelocity.OnChange += OnAngularVelocityChange;
         player.OnChange += OnChange;
         player.OnRemove += OnRemove;
+        _sessionId = sessionId;
+        ScoreManager.Instance.AddPlayer(sessionId, $"Enemy {sessionId}");
     }
 
     public void Shoot(in ShootInfo shootInfo)
@@ -37,6 +41,17 @@ public class EnemyController : MonoBehaviour
         Vector3 velocity = new Vector3(shootInfo.vX, shootInfo.vY, shootInfo.vZ);
 
         _gun.Shoot(position, velocity, _receiveTimeIntervals.AverageValue);
+    }
+
+    public void ApplyDamage(int value)
+    {
+        Dictionary<string, object> data = new Dictionary<string, object>
+        {
+            { "id", _sessionId },
+            { "value", value }
+        };
+
+        MultiplayerManager.Instance.SendMessage("damage", data);
     }
 
     private Vector3 ProcessVector3Changes(Vector3 value, List<DataChange> changes)
@@ -112,6 +127,15 @@ public class EnemyController : MonoBehaviour
         {
             switch (change.Field)
             {
+                case "deaths":
+                    ScoreManager.Instance.UpdateDeaths(_sessionId, (byte)change.Value);
+                    break;
+                case "kills":
+                    ScoreManager.Instance.UpdateKills(_sessionId, (byte)change.Value);
+                    break;
+                case "currentHP":
+                    _enemy.UpdateHealth((sbyte)change.Value);
+                    break;
                 case "isCrouching":
                     _enemy.UpdateCrouch((bool)change.Value);
                     break;

@@ -23,7 +23,19 @@ public partial class Player : Schema {
 	[Type(4, "number")]
 	public float speed = default(float);
 
-	[Type(5, "boolean")]
+	[Type(5, "int8")]
+	public sbyte maxHP = default(sbyte);
+
+	[Type(6, "int8")]
+	public sbyte currentHP = default(sbyte);
+
+	[Type(7, "boolean")]
 	public bool isCrouching = default(bool);
+
+	[Type(8, "uint8")]
+	public byte kills = default(byte);
+
+	[Type(9, "uint8")]
+	public byte deaths = default(byte);
 }
 
